@@ -67,7 +67,7 @@ public:
 	void OP_8xy4();
 
 	// 8xy5 - SUB Vx, Vy
-	void OP_8xy4();
+	void OP_8xy5();
 
 	// 8xy6 - SHR Vx
 	void OP_8xy6();

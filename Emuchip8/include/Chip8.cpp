@@ -3,9 +3,15 @@
 #include <vector>
 
 const unsigned int START_ADDRESS = 0x200;
-
 const unsigned int FONTSET_SIZE = 80;
 const unsigned int FONTSET_START_ADDRESS = 0x50;
+const unsigned int KEY_COUNT = 16;
+const unsigned int MEMORY_SIZE = 4096;
+const unsigned int REGISTER_COUNT = 16;
+const unsigned int STACK_LEVELS = 16;
+const unsigned int VIDEO_HEIGHT = 32;
+const unsigned int VIDEO_WIDTH = 64;
+
 
 uint8_t fontset[FONTSET_SIZE] =
 {
@@ -60,90 +66,250 @@ void Chip8::loadROM(char const* fileName) {
 
 void Chip8::OP_00E0()
 {
+	memset(video, 0, sizeof(video));
 }
 
 void Chip8::OP_00EE()
 {
+	--sp;
+	pc = stack[sp];
 }
 
 void Chip8::OP_1nnn()
 {
+	uint16_t address = opcode & 0x0FFFu;
+
+	pc = address;
 }
 
 void Chip8::OP_2nnn()
 {
+	uint16_t address = opcode & 0x0FFFu;
+
+	stack[sp] = pc;
+	++sp;
+	pc = address;
 }
 
 void Chip8::OP_3xkk()
 {
+	uint8_t Vx = (opcode & 0xF00u) >> 8u;
+	uint8_t byte = opcode & 0x0FFu;
+
+	if (registers[Vx] == byte)
+		pc += 2;
 }
 
 void Chip8::OP_4xkk()
 {
+	uint8_t Vx = (opcode & 0xF00u) >> 8u;
+	uint8_t byte = opcode & 0x0FFu;
+
+	if (registers[Vx] != byte)
+		pc += 2;
 }
 
 void Chip8::OP_5xy0()
 {
+	uint8_t Vx = (opcode & 0x0F00u) >> 8u;
+	uint8_t Vy = (opcode & 0x00F0u) >> 4u;
+
+	if (registers[Vx] == registers[Vy])
+		pc += 2;
 }
 
 void Chip8::OP_6xkk()
 {
+	uint8_t address = (opcode & 0x0F00u) >> 8u;
+	uint8_t byte = opcode & 0x00FFu;
+
+	registers[address] = byte;
 }
 
 void Chip8::OP_7xkk()
 {
+	uint8_t address = (opcode & 0x0F00u) >> 8u;
+	uint8_t byte = opcode & 0x00FFu;
+
+	registers[address] += byte;
 }
 
 void Chip8::OP_8xy0()
 {
+	uint8_t Vx = (opcode & 0x0F00u) >> 8u;
+	uint8_t Vy = (opcode & 0x00F0u) >> 4u;
+
+	registers[Vx] = registers[Vy];
+
 }
 
 void Chip8::OP_8xy1()
 {
+	uint8_t Vx = (opcode & 0x0F00u) >> 8u;
+	uint8_t Vy = (opcode & 0x00F0u) >> 4u;
+
+	registers[Vx] |= registers[Vy];
 }
 
 void Chip8::OP_8xy2()
 {
+	uint8_t Vx = (opcode & 0x0F00u) >> 8u;
+	uint8_t Vy = (opcode & 0x00F0u) >> 4u;
+
+	registers[Vx] &= registers[Vy];
 }
 
 void Chip8::OP_8xy3()
 {
+	uint8_t Vx = (opcode & 0x0F00u) >> 8u;
+	uint8_t Vy = (opcode & 0x00F0u) >> 4u;
+
+	registers[Vx] ^= registers[Vy];
 }
 
 void Chip8::OP_8xy4()
 {
+	uint8_t Vx = (opcode & 0x0F00u) >> 8u;
+	uint8_t Vy = (opcode & 0x00F0u) >> 4u;
+
+	uint16_t sum = registers[Vx] + registers[Vy];
+
+	if (sum > 255u)
+		registers[0xF] = 1;
+	else
+		registers[0xF] = 0;
+	
+	registers[Vx] = sum & 0xFFu;
+}
+
+void Chip8::OP_8xy5()
+{
+	uint8_t Vx = (opcode & 0x0F00u) >> 8u;
+	uint8_t Vy = (opcode & 0x00F0u) >> 4u;
+
+	if (registers[Vx] > registers[Vy])
+		registers[0xF] = 1;
+	else
+		registers[0xF] = 0;
+
+	registers[Vx] -= registers[Vy];
+
 }
 
 void Chip8::OP_8xy6()
 {
+	uint8_t Vx = (opcode & 0x0F00u) >> 8u;
+
+	// Save LSB in VF
+	registers[0xF] = (registers[Vx] & 0x1u);
+
+	registers[Vx] >>= 1;
+
 }
 
 void Chip8::OP_8xy7()
 {
+	uint8_t Vx = (opcode & 0x0F00u) >> 8u;
+	uint8_t Vy = (opcode & 0x00F0u) >> 4u;
+
+	if (registers[Vy] > registers[Vx])
+	{
+		registers[0xF] = 1;
+	}
+	else
+	{
+		registers[0xF] = 0;
+	}
+
+	registers[Vx] = registers[Vy] - registers[Vx];
+
 }
 
 void Chip8::OP_8xyE()
 {
+	uint8_t Vx = (opcode & 0x0F00u) >> 8u;
+
+	// Save MSB in VF
+	registers[0xF] = (registers[Vx] & 0x80u) >> 7u;
+
+	registers[Vx] <<= 1;
+
 }
 
 void Chip8::OP_9xy0()
 {
+	uint8_t Vx = (opcode & 0x0F00u) >> 8u;
+	uint8_t Vy = (opcode & 0x00F0u) >> 4u;
+
+	if (registers[Vx] != registers[Vy])
+	{
+		pc += 2;
+	}
+
 }
 
 void Chip8::OP_Annn()
 {
+
+	uint16_t address = opcode & 0x0FFFu;
+
+	index = address;
+
 }
 
 void Chip8::OP_Bnnn()
 {
+	uint16_t address = opcode & 0x0FFFu;
+
+	pc = registers[0] + address;
+
 }
 
 void Chip8::OP_Cxkk()
 {
+	uint8_t Vx = (opcode & 0x0F00u) >> 8u;
+	uint8_t byte = opcode & 0x00FFu;
+
+	registers[Vx] = randByte(randGen) & byte;
+
 }
 
 void Chip8::OP_Dxyn()
 {
+	uint8_t Vx = (opcode & 0x0F00u) >> 8u;
+	uint8_t Vy = (opcode & 0x00F0u) >> 4u;
+	uint8_t height = opcode & 0x000Fu;
+
+	// Wrap if going beyond screen boundaries
+	uint8_t xPos = registers[Vx] % VIDEO_WIDTH;
+	uint8_t yPos = registers[Vy] % VIDEO_HEIGHT;
+
+	registers[0xF] = 0;
+
+	for (unsigned int row = 0; row < height; ++row)
+	{
+		uint8_t spriteByte = memory[index + row];
+
+		for (unsigned int col = 0; col < 8; ++col)
+		{
+			uint8_t spritePixel = spriteByte & (0x80u >> col);
+			uint32_t* screenPixel = &video[(yPos + row) * VIDEO_WIDTH + (xPos + col)];
+
+			// Sprite pixel is on
+			if (spritePixel)
+			{
+				// Screen pixel also on - collision
+				if (*screenPixel == 0xFFFFFFFF)
+				{
+					registers[0xF] = 1;
+				}
+
+				// Effectively XOR with the sprite pixel
+				*screenPixel ^= 0xFFFFFFFF;
+			}
+		}
+	}
+
 }
 
 void Chip8::OP_Ex9E()
