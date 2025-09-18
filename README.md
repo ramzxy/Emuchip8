@@ -54,7 +54,7 @@ This project uses CMake for building and requires C++20 support.
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone https://github.com/ramzxy/Emuchip8.git
 cd Emuchip8
 ```
 
