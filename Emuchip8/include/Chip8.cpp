@@ -43,8 +43,14 @@ Chip8::Chip8()
 	// Load fontset on ROM
 	for (unsigned int i = 0; i < FONTSET_SIZE; ++i)
 		memory[FONTSET_START_ADDRESS + i] = fontset[i];
+	// Fill all with OP_NULL
+	table.fill(&Chip8::OP_NULL);
+	table0.fill(&Chip8::OP_NULL);
+	table8.fill(&Chip8::OP_NULL);
+	tableE.fill(&Chip8::OP_NULL);
+	tableF.fill(&Chip8::OP_NULL);
 
-	// Set up function pointer table
+	// Top-level table
 	table[0x0] = &Chip8::Table0;
 	table[0x1] = &Chip8::OP_1nnn;
 	table[0x2] = &Chip8::OP_2nnn;
@@ -62,16 +68,11 @@ Chip8::Chip8()
 	table[0xE] = &Chip8::TableE;
 	table[0xF] = &Chip8::TableF;
 
-	for (size_t i = 0; i <= 0xE; i++)
-	{
-		table0[i] = &Chip8::OP_NULL;
-		table8[i] = &Chip8::OP_NULL;
-		tableE[i] = &Chip8::OP_NULL;
-	}
-
+	// Table0
 	table0[0x0] = &Chip8::OP_00E0;
 	table0[0xE] = &Chip8::OP_00EE;
 
+	// Table8
 	table8[0x0] = &Chip8::OP_8xy0;
 	table8[0x1] = &Chip8::OP_8xy1;
 	table8[0x2] = &Chip8::OP_8xy2;
@@ -82,14 +83,11 @@ Chip8::Chip8()
 	table8[0x7] = &Chip8::OP_8xy7;
 	table8[0xE] = &Chip8::OP_8xyE;
 
+	// TableE
 	tableE[0x1] = &Chip8::OP_ExA1;
 	tableE[0xE] = &Chip8::OP_Ex9E;
 
-	for (size_t i = 0; i <= 0x65; i++)
-	{
-		tableF[i] = &Chip8::OP_NULL;
-	}
-
+	// TableF
 	tableF[0x07] = &Chip8::OP_Fx07;
 	tableF[0x0A] = &Chip8::OP_Fx0A;
 	tableF[0x15] = &Chip8::OP_Fx15;
@@ -117,6 +115,27 @@ void Chip8::loadROM(char const* fileName) {
 
 		//buffer is cleaned when out of scope
 	}
+}
+
+void Chip8::Cycle()
+{
+	// Fetch
+	opcode = (memory[pc] << 8u) | memory[pc + 1];
+
+	// Increment the PC before we execute anything
+	pc += 2;
+
+	// Decode and Execute
+	((*this).*(table[(opcode & 0xF000u) >> 12u]))();
+
+	// Decrement the delay timer if it's been set
+	if (delayTimer > 0)
+		--delayTimer;
+
+	// Decrement the sound timer if it's been set
+	if (soundTimer > 0)
+		--soundTimer;
+
 }
 
 void Chip8::OP_00E0()

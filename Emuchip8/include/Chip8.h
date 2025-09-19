@@ -1,6 +1,7 @@
 #include <cstdint>
 #include <chrono>
 #include <random>
+#include <array>
 
 class Chip8 {
 public:
@@ -17,10 +18,15 @@ public:
 	uint16_t opcode;
 
 
+	using Chip8Func = void (Chip8::*)();
 
 	// General methods
+
 	Chip8();
+
 	void loadROM(char const*);
+	
+	void Cycle();
 
 	// Commands
 
@@ -131,21 +137,18 @@ private:
 	std::default_random_engine randGen;
 	std::uniform_int_distribution<uint8_t> randByte;
 
-	void Table0();
+	// 
+	std::array<Chip8Func, 0x10> table;
+	std::array<Chip8Func, 0x10> table0;
+	std::array<Chip8Func, 0x10> table8;
+	std::array<Chip8Func, 0x10> tableE;
+	std::array<Chip8Func, 0x66> tableF;
 
-	void Table8();
-
-	void TableE();
-
-	void TableF();
-
-	void OP_NULL() {};
-
-	typedef void (Chip8::* Chip8Func)();
-	Chip8Func table[0xF + 1];
-	Chip8Func table0[0xE + 1];
-	Chip8Func table8[0xE + 1];
-	Chip8Func tableE[0xE + 1];
-	Chip8Func tableF[0x65 + 1];
+	// Example handlers
+	void OP_NULL() {}
+	void Table0() { (this->*table0[opcode & 0x000Fu])(); }
+	void Table8() { (this->*table8[opcode & 0x000Fu])(); }
+	void TableE() { (this->*tableE[opcode & 0x000Fu])(); }
+	void TableF() { (this->*tableF[opcode & 0x00FFu])(); }
 
 };
