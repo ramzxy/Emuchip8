@@ -1,6 +1,6 @@
 # Emuchip8 - CHIP-8 Emulator
 
-A C++ implementation of the CHIP-8 virtual machine, designed to run classic CHIP-8 games and programs.
+A C++ implementation of the CHIP-8 virtual machine using SDL2, designed to run classic CHIP-8 games and programs.
 
 ## Overview
 
@@ -9,12 +9,13 @@ CHIP-8 is an interpreted programming language that was first used on some microc
 ## Features
 
 - **Complete CHIP-8 Instruction Set**: Implements all 35 standard CHIP-8 opcodes
+- **SDL2 Graphics**: Hardware-accelerated rendering with configurable scaling
 - **Memory Management**: 4KB RAM with proper memory mapping
-- **Display System**: 64x32 pixel monochrome display
-- **Input Handling**: 16-key hexadecimal keypad support
-- **Timers**: Delay and sound timer implementation
+- **Display System**: 64x32 pixel monochrome display with pixel-perfect scaling
+- **Input Handling**: 16-key hexadecimal keypad mapped to keyboard
+- **Timers**: 60Hz delay and sound timer implementation
 - **Font System**: Built-in hexadecimal sprite font (0-F)
-- **ROM Loading**: Support for loading CHIP-8 ROM files
+- **ROM Loading**: Support for loading CHIP-8 ROM files (.ch8)
 
 ## System Specifications
 
@@ -29,73 +30,113 @@ The emulator faithfully recreates the original CHIP-8 specifications:
 - **Program Counter**: 16-bit
 - **Index Register**: 16-bit (I register)
 
-## Instruction Set
+## Controls
 
-The emulator supports all standard CHIP-8 instructions including:
+The CHIP-8 keypad is mapped to your keyboard as follows:
 
-- **System Operations**: Clear screen (CLS), Return from subroutine (RET)
-- **Flow Control**: Jump (JP), Call subroutine (CALL), Skip instructions (SE, SNE)
-- **Register Operations**: Load (LD), Add (ADD), Bitwise operations (OR, AND, XOR)
-- **Memory Operations**: Load/Store register arrays, BCD conversion
-- **Display**: Draw sprites with collision detection
-- **Input**: Key press detection and waiting
-- **Timers**: Timer manipulation and reading
+```
+CHIP-8 Keypad    Keyboard
+1 2 3 C          1 2 3 4
+4 5 6 D    =>    Q W E R
+7 8 9 E          A S D F
+A 0 B F          Z X C V
+```
+
+- **ESC**: Quit emulator
+
+## Prerequisites
+
+- **Windows**: Visual Studio 2019+ or equivalent C++20 compiler
+- **Linux/macOS**: GCC 10+ or Clang 10+
+- **CMake**: 3.8 or higher
+- **SDL2**: Development libraries (automatically installed via scripts)
 
 ## Building
 
-This project uses CMake for building and requires C++20 support.
+### Quick Setup (Windows)
 
-### Prerequisites
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/ramzxy/Emuchip8.git
+   cd Emuchip8
+   ```
 
-- CMake 3.8 or higher
-- C++20 compatible compiler (Visual Studio 2019+, GCC 10+, Clang 10+)
+2. **Install SDL2 (run as administrator):**
+   ```powershell
+   .\install_sdl2.ps1
+   ```
 
-### Build Instructions
+3. **Build the project:**
+   ```bash
+   cmake -B out/build/x64-debug -S . -G "Visual Studio 17 2022" -A x64 -DCMAKE_TOOLCHAIN_FILE=C:/Users/[YourUsername]/vcpkg/scripts/buildsystems/vcpkg.cmake
+   cmake --build out/build/x64-debug --config Debug
+   ```
 
-1. Clone the repository:
-```bash
-git clone https://github.com/ramzxy/Emuchip8.git
-cd Emuchip8
-```
+### Quick Setup (Linux/macOS)
 
-2. Create a build directory:
-```bash
-mkdir build
-cd build
-```
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/ramzxy/Emuchip8.git
+   cd Emuchip8
+   ```
 
-3. Generate build files:
-```bash
-cmake ..
-```
+2. **Install SDL2:**
+   ```bash
+   ./install_sdl2.sh
+   ```
 
-4. Build the project:
-```bash
-cmake --build .
-```
+3. **Build the project:**
+   ```bash
+   cmake -B build -S .
+   cmake --build build
+   ```
 
 ## Usage
 
-Currently, the emulator is in development. The main executable will be available after building:
+Run the emulator with the following command:
 
 ```bash
-./Emuchip8 [rom_file]
+./Emuchip8.exe <Scale> <Delay> <ROM_file>
+```
+
+### Parameters
+
+- **Scale**: Window scaling factor (recommended: 10-20)
+  - `10` = 640x320 window
+  - `15` = 960x480 window  
+  - `20` = 1280x640 window
+- **Delay**: Milliseconds between CPU cycles (recommended: 1-5)
+- **ROM_file**: Path to your CHIP-8 game file (.ch8)
+
+### Examples
+
+```bash
+# Play Tetris with 15x scaling and 2ms delay
+./Emuchip8.exe 15 2 "Tetris.ch8"
+
+# Play Space Intercept with 20x scaling and 1ms delay  
+./Emuchip8.exe 20 1 "Space Intercept [Joseph Weisbecker, 1978].ch8"
 ```
 
 ## Project Structure
 
 ```
 Emuchip8/
-├── CMakeLists.txt          # Root CMake configuration
-├── CMakePresets.json       # Visual Studio CMake presets
-├── README.md              # This file
-├── Emuchip8/              # Source code directory
-│   ├── CMakeLists.txt     # Executable CMake configuration
-│   ├── main.cpp           # Main entry point
-│   └── include/           # Header and implementation files
-│       ├── Chip8.h        # CHIP-8 class declaration
-│       └── Chip8.cpp      # CHIP-8 class implementation
-└── out/                   # Build output directory
+├── CMakeLists.txt              # Root CMake configuration
+├── CMakePresets.json           # Visual Studio CMake presets
+├── README.md                   # This file
+├── Emuchip8.exe               # Built executable
+├── install_sdl2.ps1           # Windows SDL2 installer
+├── install_sdl2.sh            # Linux/macOS SDL2 installer
+├── *.ch8                      # Sample CHIP-8 games
+├── Emuchip8/                  # Source code directory
+│   ├── CMakeLists.txt         # Executable CMake configuration
+│   ├── main.cpp               # Main entry point and game loop
+│   ├── Chip8.cpp              # CHIP-8 emulator implementation
+│   └── include/               # Header files
+│       ├── Chip8.h            # CHIP-8 class declaration
+│       └── Platform.h         # SDL2 platform wrapper
+└── out/                       # Build output directory
 ```
 
 ## Implementation Details
@@ -117,22 +158,36 @@ Emuchip8/
 
 The display uses a 64x32 pixel array where each pixel can be on (white) or off (black). Sprites are drawn using XOR logic, enabling collision detection when pixels overlap.
 
+## Sample Games Included
+
+- **Tetris**: Classic falling blocks puzzle game
+- **Space Intercept**: Shoot the UFOs before they land
+
 ## Development Status
 
-The emulator core is implemented with:
+✅ **Complete Features:**
+- Complete CHIP-8 instruction set
+- Memory management and ROM loading
+- SDL2-based graphics with scaling
+- Keyboard input handling
+- Timer system implementation
+- Font system and sprite rendering
+- Collision detection
 
-- ✅ Complete instruction set structure
-- ✅ Memory management
-- ✅ Register system
-- ✅ Basic arithmetic and logic operations
-- ✅ Display drawing with collision detection
-- ✅ Font system
-- ✅ ROM loading capability
-- ⚠️ Input handling (partial implementation)
-- ⚠️ Timer operations (partial implementation)
-- ❌ Audio output
-- ❌ User interface
-- ❌ Configuration options
+## Troubleshooting
+
+### Common Issues
+
+1. **"SDL2 not found"**: Run the appropriate install script for your platform
+2. **Small window**: Increase the scale parameter (try 15-20)
+3. **Game runs too fast/slow**: Adjust the delay parameter (1-10ms)
+4. **Build errors**: Ensure you have C++20 support and correct CMake toolchain
+
+### Getting CHIP-8 Games
+
+You can find CHIP-8 games at:
+- [CHIP-8 Archive](https://www.zophar.net/pdroms/chip8.html)
+- [CHIP-8 Games Pack](https://github.com/kripod/chip8-roms)
 
 ## Resources
 
@@ -140,3 +195,6 @@ The emulator core is implemented with:
 - [CHIP-8 Wikipedia](https://en.wikipedia.org/wiki/CHIP-8)
 - [Awesome CHIP-8](https://github.com/tobiasvl/awesome-chip-8)
 
+## License
+
+This project is open source. Feel free to use, modify, and distribute.

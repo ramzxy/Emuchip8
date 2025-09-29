@@ -1,5 +1,5 @@
 #include <fstream>
-#include "Chip8.h"
+#include "include/Chip8.h"
 #include <vector>
 
 const unsigned int START_ADDRESS = 0x200;
@@ -122,17 +122,13 @@ void Chip8::Cycle()
 	// Fetch
 	opcode = (memory[pc] << 8u) | memory[pc + 1];
 
-	// Increment the PC before we execute anything
 	pc += 2;
 
-	// Decode and Execute
 	((*this).*(table[(opcode & 0xF000u) >> 12u]))();
 
-	// Decrement the delay timer if it's been set
 	if (delayTimer > 0)
 		--delayTimer;
 
-	// Decrement the sound timer if it's been set
 	if (soundTimer > 0)
 		--soundTimer;
 
@@ -516,22 +512,3 @@ void Chip8::OP_Fx65()
 		registers[i] = memory[index + i];
 }
 
-void Chip8::Table0()
-{
-	((*this).*(table0[opcode & 0x000Fu]))();
-}
-
-void Chip8::Table8()
-{
-	((*this).*(table8[opcode & 0x000Fu]))();
-}
-
-void Chip8::TableE()
-{
-	((*this).*(tableE[opcode & 0x000Fu]))();
-}
-
-void Chip8::TableF()
-{
-	((*this).*(tableF[opcode & 0x00FFu]))();
-}

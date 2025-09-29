@@ -135,7 +135,7 @@ public:
 
 private:
 	std::default_random_engine randGen;
-	std::uniform_int_distribution<uint8_t> randByte;
+	std::uniform_int_distribution<unsigned int> randByte;
 
 	// 
 	std::array<Chip8Func, 0x10> table;
